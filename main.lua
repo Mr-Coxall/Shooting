@@ -12,6 +12,8 @@ physics.start()
 physics.setGravity( 0, 25 ) -- ( x, y )
 physics.setDrawMode( "hybrid" )   -- Shows collision engine outlines only
 
+local playerBullets = {} -- Table that holds the players Bullets
+
 local leftWall = display.newRect( 0, display.contentHeight / 2, 1, display.contentHeight )
 -- myRectangle.strokeWidth = 3
 -- myRectangle:setFillColor( 0.5 )
@@ -25,7 +27,7 @@ physics.addBody( leftWall, "static", {
 local theGround1 = display.newImage( "./assets/sprites/land.png" )
 theGround1.x = 520
 theGround1.y = display.contentHeight
-theGround1.id = "the ground 1"
+theGround1.id = "the ground"
 physics.addBody( theGround1, "static", { 
     friction = 0.5, 
     bounce = 0.3 
@@ -34,7 +36,7 @@ physics.addBody( theGround1, "static", {
 local theGround2 = display.newImage( "./assets/sprites/land.png" )
 theGround2.x = 1520
 theGround2.y = display.contentHeight
-theGround2.id = "the ground 2"
+theGround2.id = "the ground" -- notice I called this the same thing
 physics.addBody( theGround2, "static", { 
     friction = 0.5, 
     bounce = 0.3 
@@ -91,6 +93,12 @@ jumpButton.x = display.contentWidth - 80
 jumpButton.y = display.contentHeight - 80
 jumpButton.id = "jump button"
 jumpButton.alpha = 0.5
+
+local shootButton = display.newImage( "./assets/sprites/jumpButton.png" )
+shootButton.x = display.contentWidth - 250
+shootButton.y = display.contentHeight - 80
+shootButton.id = "shootButton"
+shootButton.alpha = 0.5
  
 local function characterCollision( self, event )
  
@@ -99,6 +107,22 @@ local function characterCollision( self, event )
  
     elseif ( event.phase == "ended" ) then
         print( self.id .. ": collision ended with " .. event.other.id )
+    end
+end
+
+function checkPlayerBulletsOutOfBounds()
+	-- check if any bullets have gone off the screen
+	local bulletCounter
+
+    if #playerBullets > 0 then
+        for bulletCounter = #playerBullets, 1 ,-1 do
+            if playerBullets[bulletCounter].x > display.contentWidth + 1000 then
+                playerBullets[bulletCounter]:removeSelf()
+                playerBullets[bulletCounter] = nil
+                table.remove(playerBullets, bulletCounter)
+                print("remove bullet")
+            end
+        end
     end
 end
 
@@ -163,6 +187,26 @@ function jumpButton:touch( event )
     return true
 end
 
+function shootButton:touch( event )
+    if ( event.phase == "began" ) then
+        -- make a bullet appear
+        local aSingleBullet = display.newImage( "./assets/sprites/Kunai.png" )
+        aSingleBullet.x = theCharacter.x
+        aSingleBullet.y = theCharacter.y
+        physics.addBody( aSingleBullet, 'dynamic' )
+        -- Make the object a "bullet" type object
+        aSingleBullet.isBullet = true
+        aSingleBullet.gravityScale = 0
+        aSingleBullet.id = "bullet"
+        aSingleBullet:setLinearVelocity( 1500, 0 )
+
+        table.insert(playerBullets,aSingleBullet)
+        print("# of bullet: " .. tostring(#playerBullets))
+    end
+
+    return true
+end
+
 -- if character falls off the end of the world, respawn back to where it came from
 function checkCharacterPosition( event )
     -- check every frame to see if character has fallen
@@ -177,8 +221,9 @@ upArrow:addEventListener( "touch", upArrow )
 downArrow:addEventListener( "touch", downArrow )
 leftArrow:addEventListener( "touch", leftArrow )
 rightArrow:addEventListener( "touch", rightArrow )
-jumpButton:addEventListener( "touch", jumpButton )
-Runtime:addEventListener( "enterFrame", checkCharacterPosition )
 
-theCharacter.collision = characterCollision
-theCharacter:addEventListener( "collision" )
+jumpButton:addEventListener( "touch", jumpButton )
+shootButton:addEventListener( "touch", shootButton )
+
+Runtime:addEventListener( "enterFrame", checkCharacterPosition )
+Runtime:addEventListener( "enterFrame", checkPlayerBulletsOutOfBounds )
