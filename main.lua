@@ -110,12 +110,12 @@ local function characterCollision( self, event )
     end
 end
 
-function checkPlayerBulletsOutOfBounds()
+local function checkPlayerBulletsOutOfBounds()
 	-- check if any bullets have gone off the screen
 	local bulletCounter
 
     if #playerBullets > 0 then
-        for bulletCounter = #playerBullets, 1 ,-1 do
+        for bulletCounter = #playerBullets, 1 , -1 do
             if playerBullets[bulletCounter].x > display.contentWidth + 1000 then
                 playerBullets[bulletCounter]:removeSelf()
                 playerBullets[bulletCounter] = nil
@@ -196,6 +196,7 @@ function shootButton:touch( event )
         physics.addBody( aSingleBullet, 'dynamic' )
         -- Make the object a "bullet" type object
         aSingleBullet.isBullet = true
+        aSingleBullet.isFixedRotation = true
         aSingleBullet.gravityScale = 0
         aSingleBullet.id = "bullet"
         aSingleBullet:setLinearVelocity( 1500, 0 )
@@ -208,7 +209,7 @@ function shootButton:touch( event )
 end
 
 -- if character falls off the end of the world, respawn back to where it came from
-function checkCharacterPosition( event )
+local function checkCharacterPosition( event )
     -- check every frame to see if character has fallen
     if theCharacter.y > display.contentHeight + 500 then
         theCharacter.x = display.contentCenterX - 200
